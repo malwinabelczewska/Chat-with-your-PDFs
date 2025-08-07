@@ -1,9 +1,11 @@
 import os
 import faiss
 import numpy as np
+import openai
 import tiktoken
 from openai import OpenAI
 from dotenv import load_dotenv
+import streamlit as st
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -28,17 +30,17 @@ def split_text_into_chunks(text, max_tokens=500, overlap=50):
 
 
 def get_embeddings(chunks):
+    # call OpenAI or other embedding provider
     embeddings = []
-
     for chunk in chunks:
-        response = client.embeddings.create(
+        # Replace with actual embedding logic
+        embedding = openai.Embedding.create(
             input=chunk,
             model="text-embedding-ada-002"
-        )
-        embedding = response.data[0].embedding
+        )["data"][0]["embedding"]
         embeddings.append(embedding)
+    return np.array(embeddings).astype("float32")
 
-    return embeddings
 
 
 def search_similar_chunks(query, chunks, chunk_embeddings, top_k=3):
