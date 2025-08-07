@@ -7,3 +7,7 @@ __pycache__/
 .DS_Store
 .streamlit/
 data/
+
+# FAISS index and document storage
+faiss_index.index
+docs.pkl
