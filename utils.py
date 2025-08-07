@@ -45,35 +45,21 @@ def get_embeddings(chunks):
     return np.array(embeddings).astype("float32")
 
 
-def search_similar_chunks(query, chunks, embeddings_or_index, top_k=3):
-    """Search for similar chunks using either embeddings array or FAISS index"""
+def search_similar_chunks(query, chunks, search_target, top_k=3):
+    """Search for similar chunks using ChromaDB collection"""
     try:
-        # Generate query embedding
-        query_response = client.embeddings.create(
-            input=query,
-            model="text-embedding-ada-002"
-        )
-        query_embedding = query_response.data[0].embedding
-
-        # Check if we're using FAISS index or regular embeddings
-        if hasattr(embeddings_or_index, 'search'):  # It's a FAISS index
-            index = embeddings_or_index
-            distances, indices = index.search(
-                np.array([query_embedding]).astype("float32"),
-                top_k
+        # search_target is now the ChromaDB collection
+        if hasattr(search_target, 'query'):  # It's a ChromaDB collection
+            results = search_target.query(
+                query_texts=[query],
+                n_results=top_k
             )
-            results = [chunks[i] for i in indices[0]]
-        else:  # It's a regular embeddings array
-            embeddings = embeddings_or_index
-            # Calculate cosine similarity
-            query_vec = np.array(query_embedding).reshape(1, -1)
-            similarities = np.dot(embeddings, query_vec.T).flatten()
-
-            # Get top_k most similar chunks
-            top_indices = np.argsort(similarities)[-top_k:][::-1]
-            results = [chunks[i] for i in top_indices]
-
-        return results
+            # Return the documents from ChromaDB results
+            return results['documents'][0] if results['documents'] else []
+        else:
+            # Fallback for other cases (shouldn't happen with ChromaDB)
+            st.error("Invalid search target")
+            return []
 
     except Exception as e:
         st.error(f"Error searching similar chunks: {e}")
