@@ -43,11 +43,7 @@ def get_embeddings(chunks):
 
 
 
-def search_similar_chunks(query, chunks, chunk_embeddings, top_k=3):
-    dimension = len(chunk_embeddings[0])
-    index = faiss.IndexFlatL2(dimension)
-    index.add(np.array(chunk_embeddings).astype("float32"))
-
+def search_similar_chunks(query, chunks, index, top_k=3):
     query_embedding = client.embeddings.create(
         input=query,
         model="text-embedding-ada-002"
