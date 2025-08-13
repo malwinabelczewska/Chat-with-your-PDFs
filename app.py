@@ -9,7 +9,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # Local imports
 from utils import (
     split_text_into_chunks,
-    answer_question_with_context
+    answer_question_with_context,
+    enhanced_chunk_text
 )
 from vectorstore_utils import (
     add_document_to_chromadb,
@@ -137,8 +138,28 @@ if uploaded_file:
         with st.expander("Preview extracted text"):
             st.text_area("PDF Content", text[:1000] + "..." if len(text) > 1000 else text, height=200)
 
-        # Chunk the text
-        chunks = split_text_into_chunks(text)
+        # Chunk the text - now using semantic chunking!
+        chunks = enhanced_chunk_text(text, method="semantic")
+
+        # Optional: Show comparison
+        if st.checkbox("🔬 Compare chunking methods"):
+            st.write("**Semantic Chunking** (new):")
+            semantic_chunks = enhanced_chunk_text(text, method="semantic")
+            st.write(f"Creates {len(semantic_chunks)} chunks")
+
+            st.write("**Original Chunking** (old):")
+            original_chunks = enhanced_chunk_text(text, method="original")
+            st.write(f"Creates {len(original_chunks)} chunks")
+
+            with st.expander("See first chunk comparison"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("**Semantic:**")
+                    st.write(semantic_chunks[0][:200] + "...")
+                with col2:
+                    st.write("**Original:**")
+                    st.write(original_chunks[0][:200] + "...")
+
         st.write(f"📊 This will create **{len(chunks)} chunks**")
 
         if st.checkbox("Show chunks preview"):
